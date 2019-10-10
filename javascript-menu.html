@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Java tutorial tests</title>
+</head>
+
+<body>
+<style>
+	.topbar{
+		width:100%;
+	}
+	
+	.icon_container{
+		margin:10px 10px;
+		float:right;
+		display:inline-block;
+		cursor:pointer;
+	}
+	.menuicon {
+		width:25px;
+		height:3px;
+		background-color:black;
+		margin: 6px 0;
+		transition:0.4s;
+	}
+	
+	.sidebar{
+		background-color:#AAD;
+		width:15em;
+		display:block;
+		position:absolute;
+		left:-12.5em;
+		height:100%;
+		transition:0.5s;
+	}
+	.sidebar a{
+		width:90%;
+		float:left;
+		display:block;
+		text-decoration:none;
+		color:white;
+		font-family:Arial;
+		padding-left:1em;
+	}
+	
+	.sidebar a:hover{
+		background-color:gray;
+	}
+	
+	#main {
+		//background-color:blue;
+		text-align:left;
+		width:84%;
+		margin-left:6%;
+		transition:0.5s;
+		padding-left:5%;
+		padding-right:5%;
+	}
+</style>
+
+<script type="text/javascript">
+	var menu_open = false;
+	function toggle_sidebar(){
+		if(menu_open){
+			document.getElementById('sbar').style.left="-12.5em";
+			document.getElementById('main').style.marginLeft="6%";
+			document.getElementById('main').style.width="86%";
+			menu_open=false;
+		}else{
+			document.getElementById('sbar').style.left="0";
+			document.getElementById('main').style.marginLeft="15em";
+			document.getElementById('main').style.width="67%";
+			menu_open=true;
+		}
+		
+		//console.log("Ran collapse_sidebar()");
+	}
+</script>
+
+<h2 class="topbar">Javascript testing for mobile sidebar</h2>
+
+<div class="sidebar" id="sbar">
+	<div class="icon_container" onclick="toggle_sidebar()">
+		<div class="menuicon"></div>
+		<div class="menuicon"></div>
+		<div class="menuicon"></div>
+	</div>
+	
+	<h3 style="margin-left:2%;">Projects</h3>
+	<a href="#recent">Recent Publications</a>
+	<a href="#hydrogels">Hydrogels</a>
+	<a href="#drug-deliv">Drug Delivery</a>
+	<a href="#glycopolymers">Glycopolymers</a>
+	<a href="#shape-memory">Shape-Memory Polymers</a>
+	<a href="#dent-mats">Dental Materials</a>
+	<a href="#others">Others</a>
+</div>
+
+<div id="main">
+	<h2>Projects</h2>
+	<div class="project" id="recent">
+		<p>This will contain the most recent publications and then can redirect to active or inactive projects</p>
+	</div>
+	<div class="project" id="hydrogels">
+		<h3>Molecular Hydrogels based on Natural Products</h3>
+		<p>This will contain project descriptions and images</p>
+	</div>
+	
+	<div class="project" id="drug-deliv">
+		<h3>Dendrimeric Block Copolymers based on Cholic acid for Drug Delivery</h3>
+		<p>This will contain project descriptions and images</p>
+	</div>
+	<div class="project" id="glycopolymers">
+		<h3>Artificial Glycopolymers for Lectin Protein Binding</h3>
+		<p>This will contain project descriptions and images</p>
+	</div>
+	<div class="project" id="shape-memory">
+		<h3>Two-way Reversible Shape-Memory Polymers</h3>
+		<p>This will contain project descriptions and images</p>
+	</div>
+	<div class="project" id="dent-mats">
+		<h3>Dental Material Formulations using Natural Product-based Monomers</h3>
+		<p>This will contain project descriptions and images</p>
+	</div>
+	<div class="project" id="others">
+		<h3>Other Projects</h3>
+		<p>This will contain the descriptions of the inactive projects in the group with the corresponding images</p>
+	</div>
+</div>
+
+
+
+</body>
+</html>

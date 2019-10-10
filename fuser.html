@@ -1,0 +1,64 @@
+<!DOCTYPE=html>
+<html>
+<head>
+<style>
+header{
+	width:100%;
+	height:5vh;
+	text-align:center;
+	position: static;
+	top: 0;
+	background-color:WhiteSmoke;
+}
+
+#wrapper{
+	position: static:
+	top:5vh;
+	display:flex;
+	flex-wrap: nowrap;
+	height: 92vh;
+	overflow-x:auto;
+
+	.img{
+		flex: 0 0 auto;
+	}
+}
+</style>
+<script>
+function zoomIn(){
+	//document.getElementById('wrapper').style.zoom *= 1.25;
+	var imgs = document.getElementsByClassName('img');
+	for (var i = 0; i < imgs.length; i++)
+		imgs[i].style.zoom *= 1.25;
+	console.log('zoom in');
+}
+
+function zoomOut(){
+	//document.getElementById('wrapper').style.zoom *= 0.75;
+	var imgs = document.getElementsByClassName('img');
+	for (var i = 0; i < imgs.length; i++)
+		imgs[i].style.zoom *= 0.75;
+	
+	console.log('zoom out');
+}
+</script>
+</head>
+<body>
+<header>
+<a href = "#" onclick="zoomIn(); return false;">Zoom In</a> <a href="#" onclick="zoomOut(); return false;">Zoom Out</a>
+</header>
+
+<div id="wrapper">
+<div class="part">
+<div class="img" style="background-image: url('https://drive.google.com/uc?id=1Ee0_n2JYXE77EVMvExIs1_YwYYo3irrX&export=download'); width:2265px; height:2900px; background-position:center; zoom:0.2;">&nbsp;</div>
+</div>
+<div class="part">
+<div class="img" style="background-image: url('https://drive.google.com/uc?id=1KiVYaCU0rh2NIFuxF9577JzdQcwnM6tD&export=download'); width:2288px; height:2900px; background-position:center; zoom:0.2;">&nbsp;</div>
+</div>
+<div class="part">
+<div class="img" style="background-image: url('https://drive.google.com/uc?id=1ze7E32wpgw5yGUDsME5rOPFuJLNlIln1&export=download'); width:2250px; height:2900px; background-position:center; zoom:0.2;">&nbsp;</div>
+</div>
+
+</div>
+</body>
+</html>

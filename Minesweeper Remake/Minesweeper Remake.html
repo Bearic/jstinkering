@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>Minesweeper Remake</title>
+	
+</head>
+<body onload="onLoad()" onresize="onResize()">
+<style>
+.row {
+	display:block;
+	width:100%;
+	height:20px;
+	border: 0px;
+	margin: 0px;
+	padding:0px;
+}
+.cell a{
+	padding:0;
+	margin:0;
+	display:inline-block;
+	//width:20px;
+	height:20px;
+	border-style:solid;
+	border-color:black;
+	border-width: 1px;
+	background-color:gray;
+}
+#board{
+	width:100%;
+	height:400px;
+	height:eval('width');
+	background-color:'#EEE';
+	border:1px solid black;
+	padding:0;
+	margin:0;
+	text-align:center;
+}
+
+#cancan{
+	width:100%;
+	height:100%;
+	border:1px solid #000000;
+	padding:1px;
+}
+
+#controls {
+	width:100%;
+	height:25px;
+	background:gray;
+	text-align:center;
+}
+#controls ul{
+	list-style-type:none;
+	
+}
+
+#controls li{
+	display:block;
+	float:left;
+	margin-left:auto;
+	margin-right:auto;
+	padding:5px;
+	background:'#DDD';
+}
+#controls li:hover{
+	background:'#333';
+	cursor:pointer;
+}
+
+.row{
+	width:100%;
+}
+
+@media screen and (min-width:350px) and (min-height:350px){
+	#cancan{
+		width:350px;
+		height:350px;
+	}
+}
+
+</style>
+
+<div id="main">
+	<h2>Javascript Minesweeper</h2>
+	<div id="status">Play!</div>
+	<div id="board">
+		<div id="controls" class="row"><ul>
+				<li onclick="newGame()">New Game</li>
+				<li><img id="smile" src="smile.svg" alt="smile"></li>
+				<li onclick="showAll()">Give up</li>
+		</ul></div>
+		<div class="row">
+			<canvas id="cancan" width="350" height="350" onclick="clickCanvas(event)" oncontextmenu="flag(event)" onresize="resize()" onmousedown="mousedown(event)" onmouseup="mouseup(event)"></canvas>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+// Graphical context
+var canvas; var ctx;
+var status;
+
+// Layout variables
+var cols = 10; var rows = 10;		// number of rows and columns
+
+var roffset = 0;					// vertical offset from the top
+var cwidth = 20;
+var cheight= 20;	// cell width and height
+var cborder = 1;
+
+// Game variables
+var cellstate;		// holder for the state of each cell (true - uncovered, false - still hidden)
+var cellval; 		// value of the cell once uncovered, 0 is blank
+var minefreq = 0.1;
+var mines = Math.floor(cols*rows*minefreq);
+var flagcell;
+var flagcount = 0, maxflags = mines;
+var opencount = 0;
+var lost = false, won = false;
+var pressTimer;
+
+function resize(){
+	var r = canvas.getBoundingClientRect();
+	/*canvas.width = document.getElementById("cancan").style.width;
+	canvas.height = document.getElementById("cancan").style.width;
+	console.log(r);*/
+	cwidth = Math.floor(r.height/rows)-cborder;
+	cheight= Math.floor(r.width/cols)-cborder;	// cell width and height
+	
+}
+
+function onResize(){
+	resize();
+	draw();
+}
+
+function mousedown(event){
+	pressTimer = setTimeout(function(){longPress(event);},1000);
+	document.getElementById("smile").src="worry.svg";
+}
+
+function mouseup(event){
+	document.getElementById("smile").src="smile.svg";
+	if(pressTimer){
+		clearTimeout(pressTimer);
+		return;
+	}
+}
+
+function longPress(event){
+	event.preventDefault();
+	event.stopPropagation();
+	flag(event);
+}
+
+function onLoad(){
+	canvas = document.getElementById("cancan");
+	ctx = canvas.getContext("2d");
+	
+	resize();
+	
+	//console.log("Context obtained.");
+	console.log("Set width and height to", cwidth, cheight);
+	
+	cellstate = Array (rows) // rows
+	cellval = Array (rows)
+	flagcell = Array(rows)
+	
+	for(var i = 0; i < rows; i++){
+		cellstate[i] = new Array(cols);	// columns
+		cellval[i] = new Array(cols);
+		flagcell[i] = Array(cols)
+		for(var j=0; j < cols; j++){
+			cellstate[i][j] = false;		// Unopened cells
+			flagcell[i][j] = false;
+		}
+	}
+	
+	console.log("Initialized cell state.");
+	
+	// Populate mines
+	for(i = 0; i < mines; i++){
+		do{						// pick random cell
+			trow = Math.floor(Math.random()*rows);
+			tcol = Math.floor(Math.random()*cols);
+			
+		}while(cellval[trow][tcol] == -1); // if cell is already mine, keep trying
+		//console.log("Mine at " + trow.toString() + ", " + tcol.toString());
+		cellval[trow][tcol] = -1
+		
+	}
+	
+	
+	console.log("Populated mines.");
+	
+	for(var i = 0; i < rows; i++){
+		for(var j = 0; j < cols; j++){
+			//console.log("calculating cell ", i, j);
+			//calculate value for cell
+			if(cellval[i][j] != -1){
+				cellval[i][j] = 0;
+				for(var k = -1; k <= 1 ; k++){
+					if(i+k < 0 || i+k >= rows)
+						continue;
+					for(var l = -1; l <= 1; l++){
+						if(j+l < 0 || j+l >= rows)
+							continue;
+						if(cellval[i+k][j+l] == -1)
+							cellval[i][j]++;
+					}
+				}
+				
+			}
+		}
+	}
+	
+	console.log("Calculated cell values.");
+	
+	draw();
+	
+	console.log("Drew board.");
+}
+
+function draw(){
+	//console.log("rows: " + rows.toString() + " cols: " + cols.toString());
+	for(var i = 0; i < rows; i++){
+		for(var j = 0; j < cols; j++){
+			var x = j*(cwidth+cborder);
+			var y = i*(cheight+cborder)+roffset;
+			//console.log("i: " + i.toString() + " j: " + j.toString());
+			if(cellstate[i][j]){
+				ctx.fillStyle = "#DDD";
+				ctx.fillRect(x, y, cwidth, cheight);
+				var value = cellval[i][j];
+				var fill = "#333";
+				switch(value){
+					case 1:
+						fill = "#393";
+						break;
+					case 2:
+						fill = "#339";
+						break;
+					case 3:
+						fill = "#933";
+						break;
+				}
+				if(cellval[i][j] == 0){
+					//do nothing
+				}else if(cellval[i][j] > 0){
+					ctx.fillStyle = fill;
+					ctx.fillText(cellval[i][j], x+cwidth/3, y+cheight*2/3);
+				}else if(cellval[i][j] == -1){
+					lost = true;
+					document.getElementById("status").innerHTML = "BOOM!";
+					document.getElementById("smile").src="dead.svg";
+					ctx.fillStyle = '#F44';
+					ctx.beginPath()
+					ctx.arc(x+cwidth/2, y+cheight/2, cwidth/2-2, 0, 2*Math.PI);
+					ctx.fill();
+					ctx.closePath();
+					
+				}
+				
+			}else{
+				//console.log("mine x:", i, " y:", j );
+				ctx.fillStyle = "#AAA";
+				ctx.fillRect(x, y, cwidth, cheight);
+				if(flagcell[i][j]){
+					ctx.fillStyle = '#F44';
+					ctx.lineWidth = 1;
+					ctx.strokeStyle = '#000';
+					ctx.beginPath();
+						ctx.moveTo(x+2, y+2);
+						ctx.lineTo(x+cwidth-2, y+cheight/4);
+						ctx.lineTo(x+2, y+cheight/2);
+						ctx.lineTo(x+2, y+2);
+						ctx.fill();
+						ctx.lineTo(x+2, y+cheight-2);
+						ctx.stroke();
+					ctx.closePath();
+					
+				}
+			}
+		}
+	}
+}
+
+function clickCanvas(event){
+	//console.log("Clicked ", event.clientX, event.clientY);
+	var cellx, celly;
+	[cellx, celly] = getCell(event.clientX, event.clientY);
+	
+	if(cellx == -1)
+		return;
+	
+	if(!cellstate[cellx][celly] && !flagcell[cellx][celly]){
+		cellstate[cellx][celly] = true;
+		opencount++;
+		//console.log(cellval[cellx][celly]);
+		
+		if(cellval[cellx][celly] == 0)
+			openNearbyZero(cellx, celly);
+		//else if(cellval[cellx][celly] == -1){
+		//	alert("MINE!");
+		//}
+	}
+	
+	draw();
+	
+	checkVictory();
+}
+
+function flag(event){
+	event.preventDefault();
+	event.stopPropagation();
+	document.getElementById("smile").src="smile.svg";
+	
+	var cellx, celly;
+	[cellx, celly] = getCell(event.clientX, event.clientY);
+	
+	if (cellx == -1)
+		return;
+	
+	//console.log("Right click", cellx, celly, flagcell[cellx][celly]);
+	
+	if(flagcell[cellx][celly]){
+		flagcell[cellx][celly] = false;
+		flagcount--;
+	}else if(flagcount >= maxflags)
+		return;
+	else{
+		flagcell[cellx][celly] = true;
+		flagcount++;
+	}
+	
+	draw();
+	
+	checkVictory();
+}
+
+function getCell(x, y){
+	var rect = canvas.getBoundingClientRect();
+	var celly = Math.floor((x-rect.left)/(cwidth+cborder));
+	var cellx = Math.floor((y-rect.top-roffset)/(cheight+cborder));
+	//console.log(cellx, celly);
+	if (cellx >= rows || celly >= cols)
+		return [-1,-1];
+	return [cellx, celly];
+}
+
+function openNearbyZero(x, y){
+	//console.log("Open nearby zeros");
+	for(var i = -1; i <= 1; i++){
+		if(x+i < 0 || x+i >= rows)
+			continue;
+		for(var j = -1; j <= 1; j++){
+			if(y+j < 0 || y+j >= cols)
+				continue;
+			if(!cellstate[x+i][y+j] && !flagcell[x+i][y+j]){
+				if(cellval[x+i][y+j]==0 ){
+					//console.log(x+i, y+j);
+					cellstate[x+i][y+j] = true;
+					opencount++;
+					openNearbyZero(x+i,y+j);
+				}else{
+					cellstate[x+i][y+j] = true;
+					opencount++;
+				}
+			}
+		}
+	}
+}
+
+function checkVictory(){
+	//console.log("Checking victory conditions");
+	if(lost){
+		//console.log("Previously exposed mine, no point in checking");
+		return;
+	}
+	if (opencount+flagcount < rows*cols){
+		//console.log("Not all cells are open yet.");
+		//console.log(opencount+flagcount, '/', rows*cols);
+		return;
+	}
+
+	var correct=0, opencell = 0;
+	for(var i = 0; i < rows; i++){
+		for(var j = 0; j < cols; j++){
+			if(flagcell[i][j] && cellval[i][j] == -1)
+				correct++;
+			opencell++;
+		}
+	}
+	if (correct == maxflags || opencell == rows*cols-mines){
+		//alert("Victory!");
+		document.getElementById("status").innerHTML = "Victory!";
+		document.getElementById("smile").src="cool.svg";
+	}
+}
+
+function newGame(){
+	console.log("New Game");
+	won = false;
+	lost = false;
+	onLoad();
+	document.getElementById("status").innerHTML = "Play!";
+	document.getElementById("smile").src="smile.svg";
+}
+
+function showAll(){
+	console.log("Gave up");
+	document.getElementById("status").innerHTML = "Gave up :(";
+	document.getElementById("smile").src="worry.svg";
+	for(var i = 0; i < rows; i++){
+		for(var j = 0; j < cols; j++){
+			cellstate[i][j] = true;
+		}
+	}
+	
+	draw();
+	document.getElementById("status").innerHTML = "Gave up :(";
+}
+
+</script>
+
+</body></html>

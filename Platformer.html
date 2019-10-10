@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<!-- saved from url=(0088)https://www.webdepot.umontreal.ca/Usagers/p1047951/MonDepotPublic/game2.html?uniq=43z97u -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	
+	<title>Platformer</title>
+</head>
+<body>
+	
+<canvas id="gc" width="400" height="400"></canvas>
+
+
+<script>
+
+//setup
+window.onload=function(){
+	canv = document.getElementById("gc");
+	ctx = canv.getContext("2d");
+	
+	document.addEventListener("keydown", keyDown);
+	document.addEventListener("keyup", keyUp);
+	document.getElementById("gc").addEventListener("mousedown", mouseDown);
+	document.getElementById("gc").addEventListener("mouseup", mouseUp);
+	
+	setInterval(gameLoop, 1000/60);
+}
+
+//variable declares
+
+var key = [false, false, false, false, false]; //keystates for left, up, right, down, space
+var mouse = [false, false, false, false, false]; //mouseclicks for left, up, right, down, space
+var d = new Date();
+var downTick = d.getTime();	//for monitoring click length for jump or not
+var jumpThresh = 200;		// Threshold to use as a jump.
+
+//world values
+width=height=400;
+gy=50; 			//ground position
+grav = 2.5;		//gravity
+drag = 1;		//horizontal drag (deceleration)
+
+//sprite 
+var sw=sh=25;		//sprite dimensions
+var px=width/2;		//X position - centered
+var py=height-gy;	//Y position - on ground
+var vx=vy=0;		//speed - initially 0
+var ax=2;ay=25;		//acceleration when moving
+var mvx=16;mvy=25;	//max speed
+
+
+function gameLoop(){
+	if((key[0] || mouse[0]) && vx > -mvx){	//left
+		vx-=ax;
+	}
+	if((key[2] || mouse[2]) && vx < mvx){	//right
+		vx+=ax;
+	}
+	if((key[1] || mouse[1]) && vy == 0 && py >= height-gy-50){	//up
+		vy-=ay;
+		mouse[1] = false;
+	}
+	//if(key[3])	//down
+	
+	if(key[4] || mouse[4]){	//space
+		vx=0;vy=0;
+		mouse[4] = false;
+	}
+	
+	//movement damping
+	if (vx > 0 && py == height-gy){
+		vx -= drag;
+	}else if (vx < 0 && py == height-gy){
+		vx += drag;
+	}
+	
+	//update position
+	px+=vx;
+	py+=vy;
+		
+	//gravity
+	if (py != gy){
+		vy += grav
+	}
+	
+	if (vy > 0 && py > width-gy){
+			py = height-gy
+			vy = 0
+	}
+	
+	//wrap around
+	if(px<0){
+		px=width-1;
+	}
+	if(px>width-1){
+		px=0;
+	}
+	if(py<0){
+		py=height-1;
+	}
+	if(py>height-1){
+		py=0;
+	}
+	
+	//background
+	ctx.fillStyle="#88AAFF";
+	ctx.fillRect(0,0,canv.width, canv.height);
+	
+	//ground
+	ctx.fillStyle="black";
+	ctx.fillRect(0, height-gy, width, gy)
+	
+	//square
+	ctx.fillStyle="lime";
+	ctx.fillRect(px-sw, py-sh, sw, sh);
+}
+
+function keyDown(evt){
+	switch(evt.keyCode){
+		case 37://left
+			key[0] = true;
+			break;
+		case 38://up
+			key[1] = true;
+			break;
+		case 39://right
+			key[2] = true;
+			break;
+		case 40://down
+			key[3] = true;
+			break;
+		case 32://space
+			key[4] = true;
+			break;
+	}
+}
+
+function keyUp(evt){
+	switch(evt.keyCode){
+		case 37://left
+			key[0] = false;
+			break;
+		case 38://up
+			key[1] = false;
+			break;
+		case 39://right
+			key[2] = false;
+			break;
+		case 40://down
+			key[3] = false;
+			break;
+		case 32://space
+			key[4] = false;
+			break;
+	}
+}
+
+function mouseDown(evt){
+	var xclick = evt.clientX;
+	var yclick = evt.clientY;
+	if (xclick < 150){mouse[0]=true;}
+	if (xclick > 250){mouse[2]=true;}
+	if (yclick < 150){mouse[1]=true;}
+	if (yclick > 250){mouse[3]=true;}
+	var d = new Date();
+	downTick = d.getTime(); //log time for jump purposes
+	
+	console.log("mousedown at " + downTick.toString());
+}
+
+function mouseUp(evt){
+	for (var i = 0; i < 4; i++){mouse[i] = false;}
+	var d = new Date();
+	if (d.getTime()-downTick < jumpThresh){mouse[1] = true;}
+	
+	console.log("Mouse up, downtime=" + (d.getTime()-downTick).toString());
+}
+
+</script>
+</body></html>
